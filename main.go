@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 
 	"github.com/urfave/cli"
 )
@@ -47,6 +48,67 @@ func run(c *cli.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed get stdin")
 	}
-	fmt.Println(string(b))
+	sheet, columnSize := toSheetString(string(b))
+	counts := countColumn(sheet, columnSize)
+	paddedSheet := paddingSheet(sheet, counts)
+	draw(paddedSheet)
+
 	return nil
+}
+
+func toSheetString(val string) ([][]string, int) {
+	lines := strings.Split(val, "\n")
+
+	var columnSize int
+	sheet := [][]string{}
+	for _, v := range lines {
+		columns := strings.Fields(v)
+
+		tmpSize := len(columns)
+		if columnSize < tmpSize {
+			columnSize = tmpSize
+		}
+
+		sheet = append(sheet, columns)
+	}
+	return sheet, columnSize
+}
+
+func countColumn(sheet [][]string, columnSize int) []int {
+	counts := make([]int, columnSize)
+	for _, words := range sheet {
+		for i, word := range words {
+			wordlen := len(word)
+			if counts[i] < wordlen {
+				counts[i] = wordlen
+			}
+		}
+	}
+	return counts
+}
+
+func paddingSheet(sheet [][]string, counts []int) [][]string {
+	for i, words := range sheet {
+		for j, word := range words {
+			sheet[i][j] = padRight(word, counts[j], " ")
+		}
+	}
+	return sheet
+}
+
+func padRight(str string, length int, padChar string) string {
+	return str + times(padChar, length-len(str))
+}
+
+func times(str string, n int) (out string) {
+	for i := 0; i < n; i++ {
+		out += str
+	}
+	return
+}
+
+func draw(sheet [][]string) {
+	for _, words := range sheet {
+		fmt.Println(strings.Join(words, " "))
+	}
 }
