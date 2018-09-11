@@ -27,7 +27,7 @@ func newApp() *cli.App {
 	app := cli.NewApp()
 	app.Name = "candy-align"
 	app.HelpName = "canal"
-	app.Usage = "Sweet text alignment command and libraly."
+	app.Usage = "Sweet text alignment command."
 	app.UsageText = "canal [options]"
 	app.Version = "0.0.1"
 	app.Author = "lighttiger2505"
