@@ -39,12 +39,16 @@ func newApp() *cli.App {
 	app.Email = "lighttiger2505@gmail.com"
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
-			Name:  "separator, s",
-			Usage: "separator charcter",
+			Name:  "input-delimiter, s",
+			Usage: "Delimiter of input string. Use for splitting",
 		},
 		cli.StringFlag{
-			Name:  "limits, l",
-			Usage: "separated string limit lenght",
+			Name:  "output-delimiter, d",
+			Usage: "Delimiter of output string",
+		},
+		cli.StringFlag{
+			Name:  "width, w",
+			Usage: "Output column width, separate columns by commas",
 		},
 	}
 	app.Action = run
@@ -56,24 +60,25 @@ func run(c *cli.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed get stdin")
 	}
-	sheet, columnSize := toSheetString(string(b))
+
+	inputDelimiter := c.String("input-delimiter")
+	sheet, columnSize := toSheetString(string(b), inputDelimiter)
+
 	counts := countColumn(sheet, columnSize)
 	paddedSheet := paddingSheet(sheet, counts)
 
-	limitsInput := c.String("limits")
-	if limitsInput != "" {
-		tmp, err := parceLimits(limitsInput)
+	widthInput := c.String("width")
+	if widthInput != "" {
+		width, err := parceLimits(widthInput)
 		if err != nil {
 			return err
 		}
-		fmt.Println("limits ", tmp)
-		paddedSheet = trancateLimitedLength(paddedSheet, tmp)
-		fmt.Println("limited sheet ", paddedSheet)
+		paddedSheet = trancateLimitedLength(paddedSheet, width)
 	}
 
-	separator := c.String("separator")
-	if separator != "" {
-		draw(paddedSheet, separator)
+	outputDelimiter := c.String("output-delimiter")
+	if outputDelimiter != "" {
+		draw(paddedSheet, outputDelimiter)
 	} else {
 		draw(paddedSheet, "\t")
 	}
@@ -81,8 +86,8 @@ func run(c *cli.Context) error {
 	return nil
 }
 
-func toSheetString(val string) ([][]string, int) {
-	lines := strings.Split(val, "\n")
+func toSheetString(str, delimiter string) ([][]string, int) {
+	lines := strings.Split(str, "\n")
 
 	var columnSize int
 	sheet := [][]string{}
@@ -91,7 +96,16 @@ func toSheetString(val string) ([][]string, int) {
 			continue
 		}
 
-		columns := strings.Fields(v)
+		var columns []string
+		if delimiter != "" {
+			columns = strings.Split(v, delimiter)
+			for i, column := range columns {
+				columns[i] = strings.TrimSpace(column)
+			}
+		} else {
+			columns = strings.Fields(v)
+		}
+
 		tmpSize := len(columns)
 		if columnSize < tmpSize {
 			columnSize = tmpSize

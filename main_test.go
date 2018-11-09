@@ -7,7 +7,8 @@ import (
 
 func Test_toSheetString(t *testing.T) {
 	type args struct {
-		val string
+		str       string
+		delimiter string
 	}
 	tests := []struct {
 		name  string
@@ -16,8 +17,11 @@ func Test_toSheetString(t *testing.T) {
 		want1 int
 	}{
 		{
-			"single whitespace",
-			args{"foo bar foobar\nfoobar bar foo"},
+			"single whitespace separate",
+			args{
+				str:       "foo bar foobar\nfoobar bar foo",
+				delimiter: "",
+			},
 			[][]string{
 				{"foo", "bar", "foobar"},
 				{"foobar", "bar", "foo"},
@@ -25,8 +29,11 @@ func Test_toSheetString(t *testing.T) {
 			3,
 		},
 		{
-			"multiple whitespace",
-			args{"foo  bar   foobar\nfoobar   bar  foo"},
+			"multiple whitespace separate",
+			args{
+				str:       "foo  bar   foobar\nfoobar   bar  foo",
+				delimiter: "",
+			},
 			[][]string{
 				{"foo", "bar", "foobar"},
 				{"foobar", "bar", "foo"},
@@ -34,8 +41,47 @@ func Test_toSheetString(t *testing.T) {
 			3,
 		},
 		{
-			"in the blank line",
-			args{"foo bar foobar\nfoobar bar foo\n\n\n"},
+			"tab separate",
+			args{
+				str:       "foo\tbar\tfoobar\nfoobar\tbar\tfoo",
+				delimiter: "",
+			},
+			[][]string{
+				{"foo", "bar", "foobar"},
+				{"foobar", "bar", "foo"},
+			},
+			3,
+		},
+		{
+			"specific delimiter",
+			args{
+				str:       "foo,bar,foobar\nfoobar,bar,foo",
+				delimiter: ",",
+			},
+			[][]string{
+				{"foo", "bar", "foobar"},
+				{"foobar", "bar", "foo"},
+			},
+			3,
+		},
+		{
+			"specific delimiter with whitespace",
+			args{
+				str:       " foo,bar , foobar \n  foobar,bar  ,  foo  ",
+				delimiter: ",",
+			},
+			[][]string{
+				{"foo", "bar", "foobar"},
+				{"foobar", "bar", "foo"},
+			},
+			3,
+		},
+		{
+			"Contains a blank line",
+			args{
+				str:       "foo bar foobar\nfoobar bar foo\n\n\n",
+				delimiter: "",
+			},
 			[][]string{
 				{"foo", "bar", "foobar"},
 				{"foobar", "bar", "foo"},
@@ -45,9 +91,9 @@ func Test_toSheetString(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1 := toSheetString(tt.args.val)
+			got, got1 := toSheetString(tt.args.str, tt.args.delimiter)
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("toSheetString() got = %v, want %v", got, tt.want)
+				t.Errorf("toSheetString() \ngot: %v\nwant %v", got, tt.want)
 			}
 			if got1 != tt.want1 {
 				t.Errorf("toSheetString() got1 = %v, want %v", got1, tt.want1)
@@ -307,7 +353,7 @@ func Test_parceLimits(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "in the charcter",
+			name: "contains charcter",
 			args: args{
 				str: "1,a,3,4",
 			},
