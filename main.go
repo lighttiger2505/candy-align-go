@@ -48,7 +48,7 @@ func newApp() *cli.App {
 		},
 		cli.StringFlag{
 			Name:  "width, w",
-			Usage: "Output column width, separate columns by commas",
+			Usage: "Output column width, separate fields by commas",
 		},
 	}
 	app.Action = run
@@ -62,9 +62,9 @@ func run(c *cli.Context) error {
 	}
 
 	inputDelimiter := c.String("input-delimiter")
-	table, columnSize := splitToTable(string(b), inputDelimiter)
+	table, fieldNum := splitToTable(string(b), inputDelimiter)
 
-	counts := countFields(table, columnSize)
+	counts := countFields(table, fieldNum)
 	table = padFields(table, counts)
 
 	widthInput := c.String("width")
@@ -88,37 +88,37 @@ func run(c *cli.Context) error {
 func splitToTable(str, delimiter string) ([][]string, int) {
 	lines := strings.Split(str, "\n")
 
-	var columnSize int
+	var fieldNum int
 	table := [][]string{}
 	for _, v := range lines {
 		if v == "" {
 			continue
 		}
 
-		var columns []string
+		var fields []string
 		if delimiter != "" {
-			columns = strings.Split(v, delimiter)
-			for i, column := range columns {
-				columns[i] = strings.TrimSpace(column)
+			fields = strings.Split(v, delimiter)
+			for i, column := range fields {
+				fields[i] = strings.TrimSpace(column)
 			}
 		} else {
-			columns = strings.Fields(v)
+			fields = strings.Fields(v)
 		}
 
-		tmpSize := len(columns)
-		if columnSize < tmpSize {
-			columnSize = tmpSize
+		tmpSize := len(fields)
+		if fieldNum < tmpSize {
+			fieldNum = tmpSize
 		}
-		table = append(table, columns)
+		table = append(table, fields)
 	}
-	return table, columnSize
+	return table, fieldNum
 }
 
-func countFields(table [][]string, columnSize int) []int {
-	counts := make([]int, columnSize)
-	for _, words := range table {
-		for i, word := range words {
-			runeLen := runewidth.StringWidth(word)
+func countFields(table [][]string, fieldNum int) []int {
+	counts := make([]int, fieldNum)
+	for _, fields := range table {
+		for i, field := range fields {
+			runeLen := runewidth.StringWidth(field)
 			if counts[i] < runeLen {
 				counts[i] = runeLen
 			}
@@ -128,9 +128,9 @@ func countFields(table [][]string, columnSize int) []int {
 }
 
 func padFields(table [][]string, counts []int) [][]string {
-	for i, words := range table {
-		for j, word := range words {
-			table[i][j] = padRight(word, counts[j])
+	for i, fields := range table {
+		for j, field := range fields {
+			table[i][j] = padRight(field, counts[j])
 		}
 	}
 	return table
@@ -157,16 +157,12 @@ func parceWidthFlag(str string) ([]int, error) {
 }
 
 func trancateProtrudeString(table [][]string, limits []int) [][]string {
-	for _, words := range table {
+	for _, fields := range table {
 		for i, limit := range limits {
-			words[i] = cutLeft(words[i], limit)
+			fields[i] = runewidth.Truncate(fields[i], limit, "")
 		}
 	}
 	return table
-}
-
-func cutLeft(str string, length int) string {
-	return runewidth.Truncate(str, length, "")
 }
 
 func createDrawLines(table [][]string, delimiter string) []string {

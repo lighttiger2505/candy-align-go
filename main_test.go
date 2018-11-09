@@ -126,7 +126,7 @@ func Test_countFields(t *testing.T) {
 			[]int{4, 5, 6},
 		},
 		{
-			"upper count multi byte word",
+			"upper count multi byte charcter",
 			args{
 				[][]string{
 					{"あ", "あい", "あいう"},
@@ -151,7 +151,7 @@ func Test_countFields(t *testing.T) {
 			[]int{4, 5, 6},
 		},
 		{
-			"lower count multi byte word",
+			"lower count multi byte charcter",
 			args{
 				[][]string{
 					{"あいう", "あいうえ", "あいうえお"},
