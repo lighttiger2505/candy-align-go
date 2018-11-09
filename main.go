@@ -11,7 +11,9 @@ import (
 )
 
 const (
-	ExitCodeOK    int = iota //0
+	// ExitCodeOK exit code case of OK
+	ExitCodeOK int = iota //0
+	// ExitCodeError exit code case of Error
 	ExitCodeError int = iota //1
 )
 
