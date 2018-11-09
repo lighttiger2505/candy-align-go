@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/mattn/go-runewidth"
 	"github.com/urfave/cli"
 )
 
@@ -78,9 +79,9 @@ func countColumn(sheet [][]string, columnSize int) []int {
 	counts := make([]int, columnSize)
 	for _, words := range sheet {
 		for i, word := range words {
-			wordlen := len(word)
-			if counts[i] < wordlen {
-				counts[i] = wordlen
+			runeLen := runewidth.StringWidth(word)
+			if counts[i] < runeLen {
+				counts[i] = runeLen
 			}
 		}
 	}
@@ -97,7 +98,7 @@ func paddingSheet(sheet [][]string, counts []int) [][]string {
 }
 
 func padRight(str string, length int, padChar string) string {
-	return str + times(padChar, length-len(str))
+	return str + times(padChar, length-runewidth.StringWidth(str))
 }
 
 func times(str string, n int) (out string) {

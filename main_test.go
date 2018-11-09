@@ -58,7 +58,7 @@ func Test_countColumn(t *testing.T) {
 		want []int
 	}{
 		{
-			"upper count",
+			"upper count ascii",
 			args{
 				[][]string{
 					{"f", "ba", "foo"},
@@ -71,7 +71,19 @@ func Test_countColumn(t *testing.T) {
 			[]int{4, 5, 6},
 		},
 		{
-			"lower count",
+			"upper count multi byte word",
+			args{
+				[][]string{
+					{"あ", "あい", "あいう"},
+					{"あい", "あいう", "あいうえ"},
+					{"あいう", "あいうえ", "あいうえお"},
+				},
+				3,
+			},
+			[]int{6, 8, 10},
+		},
+		{
+			"lower count ascii",
 			args{
 				[][]string{
 					{"fooo", "barrr", "foobar"},
@@ -82,6 +94,31 @@ func Test_countColumn(t *testing.T) {
 				3,
 			},
 			[]int{4, 5, 6},
+		},
+		{
+			"lower count multi byte word",
+			args{
+				[][]string{
+					{"あいう", "あいうえ", "あいうえお"},
+					{"あい", "あいう", "あいうえ"},
+					{"あ", "あい", "あいう"},
+				},
+				3,
+			},
+			[]int{6, 8, 10},
+		},
+		{
+			"upper count mix",
+			args{
+				[][]string{
+					{"f", "ba", "foo"},
+					{"あ", "あい", "あいう"},
+					{"foo", "barr", "fooba"},
+					{"あい", "あいう", "あいうえ"},
+				},
+				3,
+			},
+			[]int{4, 6, 8},
 		},
 	}
 	for _, tt := range tests {
@@ -104,7 +141,7 @@ func Test_paddingSheet(t *testing.T) {
 		want [][]string
 	}{
 		{
-			"nomal",
+			"ascii only",
 			args{
 				[][]string{
 					{"fooo", "barrr", "foobar"},
@@ -119,6 +156,40 @@ func Test_paddingSheet(t *testing.T) {
 				{"foo ", "barr ", "fooba "},
 				{"fo  ", "bar  ", "foob  "},
 				{"f   ", "ba   ", "foo   "},
+			},
+		},
+		{
+			"multi byte only",
+			args{
+				[][]string{
+					{"あ", "あい", "あいう"},
+					{"あい", "あいう", "あいうえ"},
+					{"あいう", "あいうえ", "あいうえお"},
+				},
+				[]int{6, 8, 10},
+			},
+			[][]string{
+				{"あ    ", "あい    ", "あいう    "},
+				{"あい  ", "あいう  ", "あいうえ  "},
+				{"あいう", "あいうえ", "あいうえお"},
+			},
+		},
+		{
+			"mix",
+			args{
+				[][]string{
+					{"f", "ba", "foo"},
+					{"あ", "あい", "あいう"},
+					{"foo", "barr", "fooba"},
+					{"あい", "あいう", "あいうえ"},
+				},
+				[]int{4, 6, 8},
+			},
+			[][]string{
+				{"f   ", "ba    ", "foo     "},
+				{"あ  ", "あい  ", "あいう  "},
+				{"foo ", "barr  ", "fooba   "},
+				{"あい", "あいう", "あいうえ"},
 			},
 		},
 	}
