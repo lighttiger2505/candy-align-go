@@ -37,10 +37,10 @@ func newApp() *cli.App {
 	app.Author = "lighttiger2505"
 	app.Email = "lighttiger2505@gmail.com"
 	app.Flags = []cli.Flag{
-		// 		cli.StringFlag{
-		// 			Name:  "suffix, x",
-		// 			Usage: "Diary file suffix",
-		// 		},
+		cli.StringFlag{
+			Name:  "separator, s",
+			Usage: "separator charcter",
+		},
 	}
 	app.Action = run
 	return app
@@ -54,7 +54,13 @@ func run(c *cli.Context) error {
 	sheet, columnSize := toSheetString(string(b))
 	counts := countColumn(sheet, columnSize)
 	paddedSheet := paddingSheet(sheet, counts)
-	draw(paddedSheet)
+
+	separator := c.String("separator")
+	if separator != "" {
+		draw(paddedSheet, separator)
+	} else {
+		draw(paddedSheet, "\t")
+	}
 
 	return nil
 }
@@ -111,8 +117,8 @@ func times(str string, n int) (out string) {
 	return
 }
 
-func draw(sheet [][]string) {
+func draw(sheet [][]string, separator string) {
 	for _, words := range sheet {
-		fmt.Println(strings.Join(words, " "))
+		fmt.Println(strings.Join(words, separator))
 	}
 }
