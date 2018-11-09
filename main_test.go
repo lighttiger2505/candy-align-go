@@ -374,3 +374,51 @@ func Test_parceLimits(t *testing.T) {
 		})
 	}
 }
+
+func Test_createDrawLines(t *testing.T) {
+	type args struct {
+		sheet     [][]string
+		delimiter string
+	}
+	tests := []struct {
+		name string
+		args args
+		want []string
+	}{
+		{
+			name: "default delimiter",
+			args: args{
+				sheet: [][]string{
+					{"foo", "bar", "foobar"},
+					{"foobar", "bar", "foo"},
+				},
+				delimiter: "",
+			},
+			want: []string{
+				"foo\tbar\tfoobar",
+				"foobar\tbar\tfoo",
+			},
+		},
+		{
+			name: "specific delimiter",
+			args: args{
+				sheet: [][]string{
+					{"foo", "bar", "foobar"},
+					{"foobar", "bar", "foo"},
+				},
+				delimiter: ",",
+			},
+			want: []string{
+				"foo,bar,foobar",
+				"foobar,bar,foo",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := createDrawLines(tt.args.sheet, tt.args.delimiter); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("createDrawLines() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

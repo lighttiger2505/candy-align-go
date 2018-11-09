@@ -76,11 +76,10 @@ func run(c *cli.Context) error {
 		paddedSheet = trancateLimitedLength(paddedSheet, width)
 	}
 
-	outputDelimiter := c.String("output-delimiter")
-	if outputDelimiter != "" {
-		draw(paddedSheet, outputDelimiter)
-	} else {
-		draw(paddedSheet, "\t")
+	lines := createDrawLines(sheet, c.String("output-delimiter"))
+
+	for _, line := range lines {
+		fmt.Println(line)
 	}
 
 	return nil
@@ -170,8 +169,14 @@ func cutLeft(str string, length int) string {
 	return runewidth.Truncate(str, length, "")
 }
 
-func draw(sheet [][]string, separator string) {
-	for _, words := range sheet {
-		fmt.Println(strings.Join(words, separator))
+func createDrawLines(sheet [][]string, delimiter string) []string {
+	if delimiter == "" {
+		delimiter = "\t"
 	}
+
+	res := make([]string, len(sheet))
+	for i, fields := range sheet {
+		res[i] = strings.Join(fields, delimiter)
+	}
+	return res
 }
