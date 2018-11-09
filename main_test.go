@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func Test_toSheetString(t *testing.T) {
+func Test_splitToTable(t *testing.T) {
 	type args struct {
 		str       string
 		delimiter string
@@ -91,20 +91,20 @@ func Test_toSheetString(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1 := toSheetString(tt.args.str, tt.args.delimiter)
+			got, got1 := splitToTable(tt.args.str, tt.args.delimiter)
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("toSheetString() \ngot: %v\nwant %v", got, tt.want)
+				t.Errorf("splitToTable() \ngot: %v\nwant %v", got, tt.want)
 			}
 			if got1 != tt.want1 {
-				t.Errorf("toSheetString() got1 = %v, want %v", got1, tt.want1)
+				t.Errorf("splitToTable() got1 = %v, want %v", got1, tt.want1)
 			}
 		})
 	}
 }
 
-func Test_countColumn(t *testing.T) {
+func Test_countFields(t *testing.T) {
 	type args struct {
-		sheet      [][]string
+		table      [][]string
 		columnSize int
 	}
 	tests := []struct {
@@ -178,16 +178,16 @@ func Test_countColumn(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := countColumn(tt.args.sheet, tt.args.columnSize); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("countColumn() = %v, want %v", got, tt.want)
+			if got := countFields(tt.args.table, tt.args.columnSize); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("countFields() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func Test_paddingSheet(t *testing.T) {
+func Test_padFields(t *testing.T) {
 	type args struct {
-		sheet  [][]string
+		table  [][]string
 		counts []int
 	}
 	tests := []struct {
@@ -250,15 +250,15 @@ func Test_paddingSheet(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := paddingSheet(tt.args.sheet, tt.args.counts); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("paddingSheet() = \ngot :%v\nwant:%v", got, tt.want)
+			if got := padFields(tt.args.table, tt.args.counts); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("padFields() = \ngot :%v\nwant:%v", got, tt.want)
 			}
 		})
 	}
 }
 
-func Benchmark_paddingSheet(b *testing.B) {
-	sheet := [][]string{
+func Benchmark_padFields(b *testing.B) {
+	table := [][]string{
 		{"f", "ba", "foo"},
 		{"あ", "あい", "あいう"},
 		{"foo", "barr", "fooba"},
@@ -268,13 +268,13 @@ func Benchmark_paddingSheet(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		paddingSheet(sheet, counts)
+		padFields(table, counts)
 	}
 }
 
-func Test_trancateLimitedLength(t *testing.T) {
+func Test_trancateProtrudeString(t *testing.T) {
 	type args struct {
-		sheet  [][]string
+		table  [][]string
 		limits []int
 	}
 	tests := []struct {
@@ -303,8 +303,8 @@ func Test_trancateLimitedLength(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := trancateLimitedLength(tt.args.sheet, tt.args.limits); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("trancateLimitedLength() = \ngot: %v\nwant %v", got, tt.want)
+			if got := trancateProtrudeString(tt.args.table, tt.args.limits); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("trancateProtrudeString() = \ngot: %v\nwant %v", got, tt.want)
 			}
 		})
 	}
@@ -363,13 +363,13 @@ func Test_parceLimits(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := parceLimits(tt.args.str)
+			got, err := parceWidthFlag(tt.args.str)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("parceLimits() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("parceWidthFlag() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("parceLimits() = %v, want %v", got, tt.want)
+				t.Errorf("parceWidthFlag() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -377,7 +377,7 @@ func Test_parceLimits(t *testing.T) {
 
 func Test_createDrawLines(t *testing.T) {
 	type args struct {
-		sheet     [][]string
+		table     [][]string
 		delimiter string
 	}
 	tests := []struct {
@@ -388,7 +388,7 @@ func Test_createDrawLines(t *testing.T) {
 		{
 			name: "default delimiter",
 			args: args{
-				sheet: [][]string{
+				table: [][]string{
 					{"foo", "bar", "foobar"},
 					{"foobar", "bar", "foo"},
 				},
@@ -402,7 +402,7 @@ func Test_createDrawLines(t *testing.T) {
 		{
 			name: "specific delimiter",
 			args: args{
-				sheet: [][]string{
+				table: [][]string{
 					{"foo", "bar", "foobar"},
 					{"foobar", "bar", "foo"},
 				},
@@ -416,7 +416,7 @@ func Test_createDrawLines(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := createDrawLines(tt.args.sheet, tt.args.delimiter); !reflect.DeepEqual(got, tt.want) {
+			if got := createDrawLines(tt.args.table, tt.args.delimiter); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("createDrawLines() = %v, want %v", got, tt.want)
 			}
 		})

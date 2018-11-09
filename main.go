@@ -62,21 +62,21 @@ func run(c *cli.Context) error {
 	}
 
 	inputDelimiter := c.String("input-delimiter")
-	sheet, columnSize := toSheetString(string(b), inputDelimiter)
+	table, columnSize := splitToTable(string(b), inputDelimiter)
 
-	counts := countColumn(sheet, columnSize)
-	paddedSheet := paddingSheet(sheet, counts)
+	counts := countFields(table, columnSize)
+	table = padFields(table, counts)
 
 	widthInput := c.String("width")
 	if widthInput != "" {
-		width, err := parceLimits(widthInput)
+		width, err := parceWidthFlag(widthInput)
 		if err != nil {
 			return err
 		}
-		paddedSheet = trancateLimitedLength(paddedSheet, width)
+		table = trancateProtrudeString(table, width)
 	}
 
-	lines := createDrawLines(sheet, c.String("output-delimiter"))
+	lines := createDrawLines(table, c.String("output-delimiter"))
 
 	for _, line := range lines {
 		fmt.Println(line)
@@ -85,11 +85,11 @@ func run(c *cli.Context) error {
 	return nil
 }
 
-func toSheetString(str, delimiter string) ([][]string, int) {
+func splitToTable(str, delimiter string) ([][]string, int) {
 	lines := strings.Split(str, "\n")
 
 	var columnSize int
-	sheet := [][]string{}
+	table := [][]string{}
 	for _, v := range lines {
 		if v == "" {
 			continue
@@ -109,14 +109,14 @@ func toSheetString(str, delimiter string) ([][]string, int) {
 		if columnSize < tmpSize {
 			columnSize = tmpSize
 		}
-		sheet = append(sheet, columns)
+		table = append(table, columns)
 	}
-	return sheet, columnSize
+	return table, columnSize
 }
 
-func countColumn(sheet [][]string, columnSize int) []int {
+func countFields(table [][]string, columnSize int) []int {
 	counts := make([]int, columnSize)
-	for _, words := range sheet {
+	for _, words := range table {
 		for i, word := range words {
 			runeLen := runewidth.StringWidth(word)
 			if counts[i] < runeLen {
@@ -127,13 +127,13 @@ func countColumn(sheet [][]string, columnSize int) []int {
 	return counts
 }
 
-func paddingSheet(sheet [][]string, counts []int) [][]string {
-	for i, words := range sheet {
+func padFields(table [][]string, counts []int) [][]string {
+	for i, words := range table {
 		for j, word := range words {
-			sheet[i][j] = padRight(word, counts[j])
+			table[i][j] = padRight(word, counts[j])
 		}
 	}
-	return sheet
+	return table
 }
 
 func padRight(str string, length int) string {
@@ -141,7 +141,7 @@ func padRight(str string, length int) string {
 	return fmt.Sprint(str, ws)
 }
 
-func parceLimits(str string) ([]int, error) {
+func parceWidthFlag(str string) ([]int, error) {
 	str = strings.Replace(str, " ", "", -1)
 	sp := strings.Split(str, ",")
 
@@ -156,26 +156,26 @@ func parceLimits(str string) ([]int, error) {
 	return limits, nil
 }
 
-func trancateLimitedLength(sheet [][]string, limits []int) [][]string {
-	for _, words := range sheet {
+func trancateProtrudeString(table [][]string, limits []int) [][]string {
+	for _, words := range table {
 		for i, limit := range limits {
 			words[i] = cutLeft(words[i], limit)
 		}
 	}
-	return sheet
+	return table
 }
 
 func cutLeft(str string, length int) string {
 	return runewidth.Truncate(str, length, "")
 }
 
-func createDrawLines(sheet [][]string, delimiter string) []string {
+func createDrawLines(table [][]string, delimiter string) []string {
 	if delimiter == "" {
 		delimiter = "\t"
 	}
 
-	res := make([]string, len(sheet))
-	for i, fields := range sheet {
+	res := make([]string, len(table))
+	for i, fields := range table {
 		res[i] = strings.Join(fields, delimiter)
 	}
 	return res
