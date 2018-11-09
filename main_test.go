@@ -225,3 +225,106 @@ func Benchmark_paddingSheet(b *testing.B) {
 		paddingSheet(sheet, counts)
 	}
 }
+
+func Test_trancateLimitedLength(t *testing.T) {
+	type args struct {
+		sheet  [][]string
+		limits []int
+	}
+	tests := []struct {
+		name string
+		args args
+		want [][]string
+	}{
+		{
+			"ok",
+			args{
+				[][]string{
+					{"f   ", "ba    ", "foo     "},
+					{"あ  ", "あい  ", "あいう  "},
+					{"foo ", "barr  ", "fooba   "},
+					{"あい", "あいう", "あいうえ"},
+				},
+				[]int{2, 4, 6},
+			},
+			[][]string{
+				{"f ", "ba  ", "foo   "},
+				{"あ", "あい", "あいう"},
+				{"fo", "barr", "fooba "},
+				{"あ", "あい", "あいう"},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := trancateLimitedLength(tt.args.sheet, tt.args.limits); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("trancateLimitedLength() = \ngot: %v\nwant %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_parceLimits(t *testing.T) {
+	type args struct {
+		str string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    []int
+		wantErr bool
+	}{
+		{
+			name: "no white space",
+			args: args{
+				str: "1,2,3,4",
+			},
+			want:    []int{1, 2, 3, 4},
+			wantErr: false,
+		},
+		{
+			name: "white space separator after",
+			args: args{
+				str: "1 ,2 ,3 ,4",
+			},
+			want:    []int{1, 2, 3, 4},
+			wantErr: false,
+		},
+		{
+			name: "white space separator before",
+			args: args{
+				str: "1, 2, 3, 4",
+			},
+			want:    []int{1, 2, 3, 4},
+			wantErr: false,
+		},
+		{
+			name: "multiple white space",
+			args: args{
+				str: "1, 2,  3,   4",
+			},
+			want:    []int{1, 2, 3, 4},
+			wantErr: false,
+		},
+		{
+			name: "in the charcter",
+			args: args{
+				str: "1,a,3,4",
+			},
+			want:    nil,
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := parceLimits(tt.args.str)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("parceLimits() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("parceLimits() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

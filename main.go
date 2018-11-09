@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/mattn/go-runewidth"
@@ -41,6 +42,10 @@ func newApp() *cli.App {
 			Name:  "separator, s",
 			Usage: "separator charcter",
 		},
+		cli.StringFlag{
+			Name:  "limits, l",
+			Usage: "separated string limit lenght",
+		},
 	}
 	app.Action = run
 	return app
@@ -54,6 +59,17 @@ func run(c *cli.Context) error {
 	sheet, columnSize := toSheetString(string(b))
 	counts := countColumn(sheet, columnSize)
 	paddedSheet := paddingSheet(sheet, counts)
+
+	limitsInput := c.String("limits")
+	if limitsInput != "" {
+		tmp, err := parceLimits(limitsInput)
+		if err != nil {
+			return err
+		}
+		fmt.Println("limits ", tmp)
+		paddedSheet = trancateLimitedLength(paddedSheet, tmp)
+		fmt.Println("limited sheet ", paddedSheet)
+	}
 
 	separator := c.String("separator")
 	if separator != "" {
@@ -112,11 +128,32 @@ func padRight(str string, length int) string {
 	return fmt.Sprint(str, ws)
 }
 
-func times(str string, n int) (out string) {
-	for i := 0; i < n; i++ {
-		out += str
+func parceLimits(str string) ([]int, error) {
+	str = strings.Replace(str, " ", "", -1)
+	sp := strings.Split(str, ",")
+
+	limits := make([]int, len(sp))
+	for i, limitstr := range sp {
+		limit, err := strconv.Atoi(limitstr)
+		if err != nil {
+			return nil, fmt.Errorf("invalid limit option")
+		}
+		limits[i] = limit
 	}
-	return
+	return limits, nil
+}
+
+func trancateLimitedLength(sheet [][]string, limits []int) [][]string {
+	for _, words := range sheet {
+		for i, limit := range limits {
+			words[i] = cutLeft(words[i], limit)
+		}
+	}
+	return sheet
+}
+
+func cutLeft(str string, length int) string {
+	return runewidth.Truncate(str, length, "")
 }
 
 func draw(sheet [][]string, separator string) {
