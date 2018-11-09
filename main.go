@@ -91,14 +91,15 @@ func countColumn(sheet [][]string, columnSize int) []int {
 func paddingSheet(sheet [][]string, counts []int) [][]string {
 	for i, words := range sheet {
 		for j, word := range words {
-			sheet[i][j] = padRight(word, counts[j], " ")
+			sheet[i][j] = padRight(word, counts[j])
 		}
 	}
 	return sheet
 }
 
-func padRight(str string, length int, padChar string) string {
-	return str + times(padChar, length-runewidth.StringWidth(str))
+func padRight(str string, length int) string {
+	ws := fmt.Sprintf("%-*s", length-runewidth.StringWidth(str), "")
+	return fmt.Sprint(str, ws)
 }
 
 func times(str string, n int) (out string) {

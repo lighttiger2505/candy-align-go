@@ -196,8 +196,23 @@ func Test_paddingSheet(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := paddingSheet(tt.args.sheet, tt.args.counts); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("paddingSheet() = %v, want %v", got, tt.want)
+				t.Errorf("paddingSheet() = \ngot :%v\nwant:%v", got, tt.want)
 			}
 		})
+	}
+}
+
+func Benchmark_paddingSheet(b *testing.B) {
+	sheet := [][]string{
+		{"f", "ba", "foo"},
+		{"あ", "あい", "あいう"},
+		{"foo", "barr", "fooba"},
+		{"あい", "あいう", "あいうえ"},
+	}
+	counts := []int{4, 6, 8}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		paddingSheet(sheet, counts)
 	}
 }
