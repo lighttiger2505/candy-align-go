@@ -71,13 +71,15 @@ func toSheetString(val string) ([][]string, int) {
 	var columnSize int
 	sheet := [][]string{}
 	for _, v := range lines {
-		columns := strings.Fields(v)
+		if v == "" {
+			continue
+		}
 
+		columns := strings.Fields(v)
 		tmpSize := len(columns)
 		if columnSize < tmpSize {
 			columnSize = tmpSize
 		}
-
 		sheet = append(sheet, columns)
 	}
 	return sheet, columnSize

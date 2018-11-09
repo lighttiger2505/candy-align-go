@@ -33,6 +33,15 @@ func Test_toSheetString(t *testing.T) {
 			},
 			3,
 		},
+		{
+			"in the blank line",
+			args{"foo bar foobar\nfoobar bar foo\n\n\n"},
+			[][]string{
+				{"foo", "bar", "foobar"},
+				{"foobar", "bar", "foo"},
+			},
+			3,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
