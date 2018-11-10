@@ -61,28 +61,54 @@ func run(c *cli.Context) error {
 		return fmt.Errorf("failed get stdin")
 	}
 
-	inputDelimiter := c.String("input-delimiter")
-	table, fieldNum := splitToTable(string(b), inputDelimiter)
-
-	counts := countFields(table, fieldNum)
-	table = padFields(table, counts)
-
+	var width []int
 	widthInput := c.String("width")
 	if widthInput != "" {
-		width, err := parceWidthFlag(widthInput)
+		width, err = parceWidthFlag(widthInput)
 		if err != nil {
 			return err
 		}
-		table = trancateProtrudeString(table, width)
 	}
 
-	lines := createDrawLines(table, c.String("output-delimiter"))
+	lines := Align(
+		string(b),
+		&AlignOption{
+			inputDelimiter:  c.String("input-delimiter"),
+			outputDelimiter: c.String("output-delimiter"),
+			width:           width,
+		},
+	)
 
 	for _, line := range lines {
 		fmt.Println(line)
 	}
 
 	return nil
+}
+
+type AlignOption struct {
+	inputDelimiter  string
+	outputDelimiter string
+	width           []int
+}
+
+func Align(text string, opt *AlignOption) []string {
+	table, count := Separate(text, opt.inputDelimiter)
+	return Format(table, count, opt.width, opt.inputDelimiter)
+}
+
+func Separate(str, delimiter string) ([][]string, []int) {
+	table, fieldNum := splitToTable(str, delimiter)
+	counts := countFields(table, fieldNum)
+	return table, counts
+}
+
+func Format(table [][]string, counts, width []int, delimiter string) []string {
+	table = padFields(table, counts)
+	if len(width) > 0 {
+		table = trancateProtrudeString(table, width)
+	}
+	return createDrawLines(table, delimiter)
 }
 
 func splitToTable(str, delimiter string) ([][]string, int) {
